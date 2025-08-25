@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { RegisterUserDto } from './dto/register-user.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from 'src/mail/mail.service';
+import { OtpService } from 'src/otp/otp.service';
 
 
 @Injectable()
@@ -15,6 +17,12 @@ export class UserService {
 
   @Inject(JwtService)
   private jwtService: JwtService;
+
+  @Inject(MailService)
+  private mailService: MailService;
+
+  @Inject(OtpService)
+  private otpService: OtpService;
 
   async register(user: RegisterUserDto) {
     const existingUser = await this.userRepository.findOne({ where: { username: user.username } });
@@ -27,6 +35,10 @@ export class UserService {
       password: hashedPassword,
       email: user.email,
     });
+
+    const otp = this.otpService.generateOtp();
+    await this.otpService.saveOtp(`otp:${newUser.username}`, otp);
+    await this.mailService.sendOtpEmail(newUser.email, otp);
 
     try {
       await this.userRepository.save(newUser);
