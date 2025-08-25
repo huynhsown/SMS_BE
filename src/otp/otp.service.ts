@@ -27,4 +27,10 @@ export class OtpService {
         await this.redisService.del(key);
     }
 
+    async verifyOtp(to: string, otp: string): Promise<boolean> {
+        const storedOtp = await this.redisService.get(`otp:${to}`);
+        if (!storedOtp) return false;
+        return storedOtp === otp;
+    }
+
 }
