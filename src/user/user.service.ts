@@ -57,7 +57,7 @@ export class UserService {
     if (!user) throw new HttpException('User with this email does not exist', 404);
 
     const otp = this.otpService.generateOtp();
-    await this.otpService.saveOtp(`otp:${user.username}`, otp);
+    await this.otpService.saveOtp(`otp:${user.email}`, otp);
     await this.mailService.sendOtpEmail(user.email, otp);
 
     return { message: 'OTP has been sent to your email' };
