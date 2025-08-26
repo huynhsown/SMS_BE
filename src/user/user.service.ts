@@ -6,6 +6,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from 'src/mail/mail.service';
@@ -96,6 +97,24 @@ export class UserService {
     await this.userRepository.save(user);
 
     return { message: 'Password has been reset successfully' };
+  }
+
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new HttpException('Invalid email or password', 401);
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new HttpException('Invalid email or password', 401);
+    }
+    const payload = { sub: user._id, email: user.email };
+    const accessToken = this.jwtService.sign(payload);
+    return {
+      message: 'Login successful',
+      accessToken,
+    };
   }
 
 }
