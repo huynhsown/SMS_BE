@@ -8,6 +8,9 @@ export class RegisterUserDto {
     @MinLength(8, { message: 'Password must be at least 8 characters long' })
     password: string;
 
+    @MinLength(8, { message: 'Confirm Password must be at least 8 characters long' })
+    confirmPassword: string;
+
     @IsEmail({}, { message: 'Email must be a valid email address' })
     email: string;
 }
