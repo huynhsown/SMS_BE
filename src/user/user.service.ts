@@ -31,6 +31,11 @@ export class UserService {
     if (existingUser) {
       throw new HttpException('Username already exists', 200);
     }
+
+    if (user.password !== user.confirmPassword) {
+      throw new HttpException('Password and Confirm Password do not match', 400);
+    }
+
     const hashedPassword = await bcrypt.hash(user.password, 10);
     const newUser = this.userRepository.create({
       username: user.username,
