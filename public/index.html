@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ - SMS Store</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 2rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .section {
+            background: #fff;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .product-info {
+            padding: 1rem;
+        }
+
+        .product-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .product-price {
+            color: #007bff;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .product-discount {
+            color: #28a745;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .product-stats {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0;
+            gap: 0.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .pagination button.active {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .filters {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .search-bar {
+                margin: 0;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">SMS Store</div>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm...">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Sản phẩm mới nhất -->
+        <div class="section">
+            <h2 class="section-title">🆕 Sản phẩm mới nhất</h2>
+            <div class="product-grid" id="newest-products">
+                <div class="loading">Đang tải...</div>
+            </div>
+        </div>
+
+        <!-- Sản phẩm bán chạy -->
+        <div class="section">
+            <h2 class="section-title">🔥 Sản phẩm bán chạy nhất</h2>
+            <div class="product-grid" id="bestseller-products">
+                <div class="loading">Đang tải...</div>
+            </div>
+        </div>
+
+        <!-- Sản phẩm được xem nhiều -->
+        <div class="section">
+            <h2 class="section-title">👁️ Sản phẩm được xem nhiều nhất</h2>
+            <div class="product-grid" id="mostviewed-products">
+                <div class="loading">Đang tải...</div>
+            </div>
+        </div>
+
+        <!-- Sản phẩm khuyến mãi -->
+        <div class="section">
+            <h2 class="section-title">💰 Sản phẩm khuyến mãi cao nhất</h2>
+            <div class="product-grid" id="discount-products">
+                <div class="loading">Đang tải...</div>
+            </div>
+        </div>
+
+        <!-- Danh sách tất cả sản phẩm -->
+        <div class="section">
+            <h2 class="section-title">📦 Tất cả sản phẩm</h2>
+            
+            <!-- Bộ lọc -->
+            <div class="filters">
+                <div class="filter-group">
+                    <select id="categoryFilter">
+                        <option value="">Tất cả danh mục</option>
+                    </select>
+                    <input type="text" id="searchFilter" placeholder="Tìm kiếm...">
+                    <select id="limitFilter">
+                        <option value="8">8 sản phẩm</option>
+                        <option value="12">12 sản phẩm</option>
+                        <option value="20">20 sản phẩm</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="product-grid" id="all-products">
+                <div class="loading">Đang tải...</div>
+            </div>
+
+            <!-- Phân trang -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination buttons will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL - thay đổi theo cấu hình server của bạn
+        const API_BASE_URL = 'http://localhost:3000';
+
+        // State management
+        let currentPage = 1;
+        let currentLimit = 8;
+        let currentCategory = '';
+        let currentSearch = '';
+        let categories = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHomeProducts();
+            loadCategories();
+            loadAllProducts();
+            
+            // Event listeners
+            document.getElementById('searchInput').addEventListener('input', debounce(handleGlobalSearch, 500));
+            document.getElementById('categoryFilter').addEventListener('change', handleCategoryFilter);
+            document.getElementById('searchFilter').addEventListener('input', debounce(handleSearchFilter, 500));
+            document.getElementById('limitFilter').addEventListener('change', handleLimitFilter);
+        });
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Load home products
+        async function loadHomeProducts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/products/home`);
+                const data = await response.json();
+                
+                renderProducts('newest-products', data.newest);
+                renderProducts('bestseller-products', data.bestsellers);
+                renderProducts('mostviewed-products', data.mostViewed);
+                renderProducts('discount-products', data.topDiscounts);
+            } catch (error) {
+                console.error('Error loading home products:', error);
+                showError('Không thể tải sản phẩm trang chủ');
+            }
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories`);
+                const data = await response.json();
+                categories = data;
+                
+                const categorySelect = document.getElementById('categoryFilter');
+                categorySelect.innerHTML = '<option value="">Tất cả danh mục</option>';
+                
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category._id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Load all products with pagination
+        async function loadAllProducts() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: currentLimit
+                });
+                
+                if (currentCategory) params.append('categoryId', currentCategory);
+                if (currentSearch) params.append('search', currentSearch);
+                
+                const response = await fetch(`${API_BASE_URL}/products?${params}`);
+                const data = await response.json();
+                
+                renderProducts('all-products', data.products);
+                renderPagination(data.page, data.totalPages, data.total);
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showError('Không thể tải danh sách sản phẩm');
+            }
+        }
+
+        // Render products
+        function renderProducts(containerId, products) {
+            const container = document.getElementById(containerId);
+            
+            if (!products || products.length === 0) {
+                container.innerHTML = '<div class="loading">Không có sản phẩm nào</div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(product => createProductCard(product)).join('');
+        }
+
+        // Create product card HTML
+        function createProductCard(product) {
+            const discountHtml = product.discountPercent > 0 ? 
+                `<div class="product-discount">Giảm ${product.discountPercent}% - Còn ${formatPrice(product.discountPrice)}</div>` : '';
+            
+            const imageHtml = product.images && product.images.length > 0 ?
+                `<img src="${product.images[0]}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                'Không có hình ảnh';
+
+            return `
+                <div class="product-card" onclick="viewProduct('${product.slug}')">
+                    <div class="product-image">
+                        ${imageHtml}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${formatPrice(product.price)}</div>
+                        ${discountHtml}
+                        <div class="product-stats">
+                            👁️ ${product.viewCount} lượt xem | 
+                            🛒 ${product.soldCount} đã bán | 
+                            📦 ${product.stock} còn lại
+                        </div>
+                        <div class="product-stats">
+                            ${product.category ? `📂 ${product.category.name}` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render pagination
+        function renderPagination(currentPage, totalPages, totalItems) {
+            const container = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = `<div>Trang ${currentPage} / ${totalPages} (${totalItems} sản phẩm)</div>`;
+            
+            // Previous button
+            if (currentPage > 1) {
+                html += `<button onclick="changePage(${currentPage - 1})">« Trước</button>`;
+            }
+            
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === currentPage ? 'active' : '';
+                html += `<button class="${active}" onclick="changePage(${i})">${i}</button>`;
+            }
+            
+            // Next button
+            if (currentPage < totalPages) {
+                html += `<button onclick="changePage(${currentPage + 1})">Sau »</button>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Event handlers
+        function changePage(page) {
+            currentPage = page;
+            loadAllProducts();
+        }
+
+        function handleGlobalSearch(event) {
+            const search = event.target.value.trim();
+            document.getElementById('searchFilter').value = search;
+            currentSearch = search;
+            currentPage = 1;
+            loadAllProducts();
+        }
+
+        function handleCategoryFilter(event) {
+            currentCategory = event.target.value;
+            currentPage = 1;
+            loadAllProducts();
+        }
+
+        function handleSearchFilter(event) {
+            currentSearch = event.target.value.trim();
+            document.getElementById('searchInput').value = currentSearch;
+            currentPage = 1;
+            loadAllProducts();
+        }
+
+        function handleLimitFilter(event) {
+            currentLimit = parseInt(event.target.value);
+            currentPage = 1;
+            loadAllProducts();
+        }
+
+        function viewProduct(slug) {
+            alert(`Xem chi tiết sản phẩm: ${slug}`);
+            // Ở đây bạn có thể chuyển hướng đến trang chi tiết sản phẩm
+            // window.location.href = `/product/${slug}`;
+        }
+
+        // Utility functions
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(price);
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+    </script>
+</body>
+</html>
