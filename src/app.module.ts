@@ -9,6 +9,10 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { OtpModule } from './otp/otp.module';
 import { MailModule } from './mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
+import { Product } from './product/entities/product.entity';
+import { Category } from './category/entities/category.entity';
+import { ProductModule } from './product/product.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -22,7 +26,7 @@ import { ConfigModule } from '@nestjs/config';
       authSource: 'admin',
       synchronize: true,
       logging: true,
-      entities: [User],
+      entities: [User, Product, Category],
       migrations: [],
       subscribers: []
     }),
@@ -39,6 +43,8 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
     }),
     UserModule,
+    CategoryModule,
+    ProductModule,
     OtpModule,
     MailModule
   ],
