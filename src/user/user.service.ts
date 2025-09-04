@@ -1,4 +1,4 @@
-import { HttpException, Inject, Injectable, Post } from '@nestjs/common';
+import { HttpException, Inject, Injectable, Post, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from 'src/mail/mail.service';
 import { OtpService } from 'src/otp/otp.service';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class UserService {
@@ -44,9 +45,9 @@ export class UserService {
       email: user.email,
     });
 
-    const otp = this.otpService.generateOtp();
-    await this.otpService.saveOtp(`otp:${newUser.username}`, otp);
-    await this.mailService.sendOtpEmail(newUser.email, otp);
+    // const otp = this.otpService.generateOtp();
+    // await this.otpService.saveOtp(`otp:${newUser.username}`, otp);
+    // await this.mailService.sendOtpEmail(newUser.email, otp);
 
     try {
       await this.userRepository.save(newUser);
@@ -122,4 +123,23 @@ export class UserService {
     };
   }
 
+  async findById(id: string) {
+  const user = await this.userRepository.findOne({
+    where: { _id: new ObjectId(id) },
+    select: ['_id', 'username', 'email', 'createdAt', 'updatedAt', 'isActive'],
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  return {
+      _id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      isActive: user.isActive,
+    };
+  }
 }

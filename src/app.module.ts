@@ -16,6 +16,17 @@ import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
+    // 1) Load env first
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    // 2) Register JwtModule using process.env.JWT_SECRET
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
+    }),
+
+    // 3) Other infra modules
     TypeOrmModule.forRoot({
       type: 'mongodb',
       host: 'localhost',
@@ -34,14 +45,7 @@ import { CategoryModule } from './category/category.module';
       type: 'single',
       url: 'redis://localhost:6379',
     }),
-    JwtModule.register({
-      global: true,
-      secret: 'yb97MhYMBXdi5tq37hF5PT9Xa1DsjHgm',
-      signOptions: { expiresIn: '1h' },
-    }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+
     UserModule,
     CategoryModule,
     ProductModule,
