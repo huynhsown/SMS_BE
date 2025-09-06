@@ -14,6 +14,12 @@ export class User {
     @Column({ unique: true })
     email: string;
 
+    @Column({ unique: true })
+    phone: string;
+
+    @Column({ nullable: true })
+    avatar: string;
+
     @CreateDateColumn()
     createdAt: Date;
 

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Put, Request} from '@nestjs/common';
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -7,6 +7,8 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ProfileResponseDto } from './dto/profile-response.dto';
+import { ProfileUpdateDto } from './dto/profile-update.dto';
+
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -41,4 +43,12 @@ export class UserController {
   async getProfile(@Request() req: any): Promise<ProfileResponseDto> {
     return this.userService.findById(req.user._id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('update-profile')
+  async updateProfile(@Request() req, @Body() updateDto: ProfileUpdateDto) {
+    const userId = req.user._id; 
+    return this.userService.updateProfile(userId, updateDto);
+  }
+
 }

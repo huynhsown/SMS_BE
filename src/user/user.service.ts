@@ -7,6 +7,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { ProfileUpdateDto } from './dto/profile-update.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from 'src/mail/mail.service';
@@ -126,7 +127,7 @@ export class UserService {
   async findById(id: string) {
   const user = await this.userRepository.findOne({
     where: { _id: new ObjectId(id) },
-    select: ['_id', 'username', 'email', 'createdAt', 'updatedAt', 'isActive'],
+    select: ['_id', 'username', 'email', 'phone', 'avatar', 'createdAt', 'updatedAt', 'isActive'],
   });
 
   if (!user) {
@@ -137,9 +138,39 @@ export class UserService {
       _id: user._id.toString(),
       username: user.username,
       email: user.email,
+      phone: user.phone,  
+      avatar: user.avatar,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       isActive: user.isActive,
     };
   }
+
+  async updateProfile(userId: string, updateDto: ProfileUpdateDto) {
+    const { username, email, phone } = updateDto;
+
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (username) user.username = username;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+
+    await this.userRepository.save(user);
+
+    return {
+      _id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+  
 }
