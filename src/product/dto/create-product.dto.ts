@@ -21,6 +21,16 @@ export class CreateProductDto {
 	@Min(0)
 	price: number;
 
+	@IsNumber()
+	@Min(0)
+	@IsOptional()
+	discountPrice?: number;
+
+	@IsNumber()
+	@Min(0)
+	@IsOptional()
+	discountPercent?: number;
+
 	@IsString()
 	@IsOptional()
 	description?: string;
@@ -29,5 +39,4 @@ export class CreateProductDto {
 	@IsNotEmpty()
 	categoryId: string;
 }
-
 

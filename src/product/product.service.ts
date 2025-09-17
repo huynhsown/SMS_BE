@@ -5,6 +5,8 @@ import { Product } from './entities/product.entity';
 import { Category } from 'src/category/entities/category.entity';
 import { ObjectId } from 'mongodb';
 import { CreateProductDto } from './dto/create-product.dto';
+import { PaginationDto } from './dto/pagination.dto';
+import { HomeProductsDto, ProductSummaryDto, PaginatedProductsDto } from './dto/product-response.dto';
 
 @Injectable()
 export class ProductService {
@@ -26,9 +28,21 @@ export class ProductService {
 			}
 		}
 		return {
-			...product,
-			category: category ? { _id: category._id, name: category.name, slug: category.slug } : null,
+			_id: product._id.toString(),
+			name: product.name,
+			slug: product.slug,
+			images: product.images,
+			price: product.price,
+			discountPrice: product.discountPrice,
+			discountPercent: product.discountPercent,
+			stock: product.stock,
+			viewCount: product.viewCount,
+			soldCount: product.soldCount,
+			description: product.description,
+			category: category ? { _id: category._id.toString(), name: category.name, slug: category.slug } : undefined,
 			inStock: product.stock > 0,
+			createdAt: product.createdAt,
+			updatedAt: product.updatedAt,
 		};
 	}
 
@@ -48,11 +62,129 @@ export class ProductService {
 			images: dto.images ?? [],
 			stock: dto.stock ?? 0,
 			price: dto.price ?? 0,
+			discountPrice: dto.discountPrice ?? 0,
+			discountPercent: dto.discountPercent ?? 0,
 			description: dto.description ?? '',
 			categoryId: dto.categoryId,
 		});
 		await this.productRepository.save(product);
 		return product;
+	}
+
+	async getHomeProducts(): Promise<HomeProductsDto> {
+		// 8 sản phẩm mới nhất
+		const newest = await this.productRepository.find({
+			order: { createdAt: 'DESC' },
+			take: 8,
+		});
+
+		// 6 sản phẩm bán chạy nhất
+		const bestsellers = await this.productRepository.find({
+			order: { soldCount: 'DESC' },
+			take: 6,
+		});
+
+		// 8 sản phẩm được xem nhiều nhất
+		const mostViewed = await this.productRepository.find({
+			order: { viewCount: 'DESC' },
+			take: 8,
+		});
+
+		// 4 sản phẩm khuyến mãi cao nhất
+		const topDiscounts = await this.productRepository.find({
+			where: { discountPercent: { $gt: 0 } as any },
+			order: { discountPercent: 'DESC' },
+			take: 4,
+		});
+
+		return {
+			newest: await this.enrichProductsWithCategory(newest),
+			bestsellers: await this.enrichProductsWithCategory(bestsellers),
+			mostViewed: await this.enrichProductsWithCategory(mostViewed),
+			topDiscounts: await this.enrichProductsWithCategory(topDiscounts),
+		};
+	}
+
+	async getPaginatedProducts(pagination: PaginationDto): Promise<PaginatedProductsDto> {
+		const { page = 1, limit = 10, categoryId, search } = pagination;
+		const skip = (page - 1) * limit;
+
+		const query: any = {};
+
+		if (categoryId) {
+			query.categoryId = categoryId;
+		}
+
+		if (search) {
+			query.$or = [
+				{ name: { $regex: search, $options: 'i' } },
+				{ description: { $regex: search, $options: 'i' } }
+			];
+		}
+
+		const [products, total] = await this.productRepository.findAndCount({
+			where: query,
+			order: { createdAt: 'DESC' },
+			skip,
+			take: limit,
+		});
+
+		const totalPages = Math.ceil(total / limit);
+
+		return {
+			products: await this.enrichProductsWithCategory(products),
+			total,
+			page,
+			limit,
+			totalPages,
+		};
+	}
+
+	async incrementViewCount(slug: string) {
+		const product = await this.productRepository.findOne({ where: { slug } });
+		if (product) {
+			product.viewCount += 1;
+			await this.productRepository.save(product);
+		}
+	}
+
+	private async enrichProductsWithCategory(products: Product[]): Promise<ProductSummaryDto[]> {
+		const result: ProductSummaryDto[] = [];
+
+		for (const product of products) {
+			let category: Category | null = null;
+			if (product.categoryId) {
+				try {
+					category = await this.categoryRepository.findOne({ 
+						where: { _id: new ObjectId(product.categoryId) } as any 
+					});
+				} catch (_) {
+					category = null;
+				}
+			}
+
+			result.push({
+				_id: product._id.toString(),
+				name: product.name,
+				slug: product.slug,
+				images: product.images,
+				price: product.price,
+				discountPrice: product.discountPrice,
+				discountPercent: product.discountPercent,
+				stock: product.stock,
+				viewCount: product.viewCount,
+				soldCount: product.soldCount,
+				category: category ? { 
+					_id: category._id.toString(), 
+					name: category.name, 
+					slug: category.slug 
+				} : undefined,
+				inStock: product.stock > 0,
+				createdAt: product.createdAt,
+			});
+		}
+
+		return result;
 	}
 }
 
