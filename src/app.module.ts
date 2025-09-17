@@ -11,8 +11,10 @@ import { MailModule } from './mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
 import { Product } from './product/entities/product.entity';
 import { Category } from './category/entities/category.entity';
+import { Cart } from './cart/entities/cart.entity';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -37,7 +39,7 @@ import { CategoryModule } from './category/category.module';
       authSource: 'admin',
       synchronize: true,
       logging: true,
-      entities: [User, Product, Category],
+      entities: [User, Product, Category, Cart],
       migrations: [],
       subscribers: []
     }),
@@ -49,6 +51,7 @@ import { CategoryModule } from './category/category.module';
     UserModule,
     CategoryModule,
     ProductModule,
+    CartModule,
     OtpModule,
     MailModule
   ],
