@@ -106,8 +106,10 @@ export class ProductService {
 	}
 
 	async getPaginatedProducts(pagination: PaginationDto): Promise<PaginatedProductsDto> {
-		const { page = 1, limit = 10, categoryId, search } = pagination;
-		const skip = (page - 1) * limit;
+		const { page = 1, limit = 10, categoryId, search, cursor } = pagination;
+		const pageNum = Number(page);
+		const limitNum = Number(limit);
+		const skip = (pageNum - 1) * limitNum;
 
 		const query: any = {};
 
@@ -122,22 +124,42 @@ export class ProductService {
 			];
 		}
 
+		// Cursor-based pagination cho Lazy Loading
+		if (cursor) {
+			query.createdAt = { $lt: new Date(cursor) };
+		}
+
 		const [products, total] = await this.productRepository.findAndCount({
 			where: query,
 			order: { createdAt: 'DESC' },
 			skip,
-			take: limit,
+			take: limitNum,
 		});
 
-		const totalPages = Math.ceil(total / limit);
+		const totalPages = Math.ceil(total / limitNum);
+		const nextCursor = products.length > 0 ? products[products.length - 1].createdAt.toISOString() : undefined;
 
 		return {
 			products: await this.enrichProductsWithCategory(products),
 			total,
-			page,
-			limit,
+			page: pageNum,
+			limit: limitNum,
 			totalPages,
+			nextCursor,
+			hasMore: products.length === limitNum,
 		};
+	}
+
+	async getProductsByCategorySlug(categorySlug: string, pagination: PaginationDto): Promise<PaginatedProductsDto> {
+		// Tìm category theo slug
+		const category = await this.categoryRepository.findOne({ where: { slug: categorySlug } });
+		if (!category) throw new HttpException('Category not found', 404);
+
+		// Lấy sản phẩm theo categoryId
+		return this.getPaginatedProducts({
+			...pagination,
+			categoryId: category._id.toString(),
+		});
 	}
 
 	async incrementViewCount(slug: string) {
