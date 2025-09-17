@@ -10,12 +10,13 @@ async function seed() {
   const categoryService = app.get(CategoryService);
 
   try {
-    // Tạo category mẫu (nếu chưa có)
+    // --------- Tạo category ---------
     const sampleCategories = [
       { name: 'Điện thoại', slug: 'dien-thoai' },
       { name: 'Laptop', slug: 'laptop' },
       { name: 'Tablet', slug: 'tablet' },
-      { name: 'Phụ kiện', slug: 'phu-kien' }
+      { name: 'Phụ kiện', slug: 'phu-kien' },
+      { name: 'Đồ gia dụng', slug: 'do-gia-dung' }
     ];
 
     const categories: Category[] = [];
@@ -26,18 +27,15 @@ async function seed() {
         console.log(`Created category: ${category.name}`);
       } catch (error) {
         console.log(`Category ${cat.name} might already exist`);
-        // For simplicity, we'll use hardcoded category IDs if they exist
-        // In production, you'd want to implement getBySlug in CategoryService
       }
     }
 
-    // If no categories were created (they already exist), skip product creation
     if (categories.length === 0) {
       console.log('No new categories created. Please check existing categories manually.');
       return;
     }
 
-    // Tạo sản phẩm mẫu
+    // --------- Tạo sản phẩm mẫu ban đầu ---------
     const sampleProducts = [
       {
         name: 'iPhone 15 Pro Max',
@@ -70,7 +68,7 @@ async function seed() {
         discountPrice: 43990000,
         discountPercent: 4,
         description: 'MacBook Pro với chip M3 siêu mạnh',
-        categoryId: categories.length > 1 ? categories[1]._id.toString() : categories[0]._id.toString()
+        categoryId: categories[1]?._id.toString() || categories[0]._id.toString()
       },
       {
         name: 'Dell XPS 13',
@@ -81,7 +79,7 @@ async function seed() {
         discountPrice: 32990000,
         discountPercent: 8,
         description: 'Dell XPS 13 siêu mỏng nhẹ',
-        categoryId: categories.length > 1 ? categories[1]._id.toString() : categories[0]._id.toString()
+        categoryId: categories[1]?._id.toString() || categories[0]._id.toString()
       },
       {
         name: 'iPad Pro 12.9',
@@ -92,7 +90,7 @@ async function seed() {
         discountPrice: 23990000,
         discountPercent: 8,
         description: 'iPad Pro 12.9 inch với màn hình Liquid Retina',
-        categoryId: categories.length > 2 ? categories[2]._id.toString() : categories[0]._id.toString()
+        categoryId: categories[2]?._id.toString() || categories[0]._id.toString()
       },
       {
         name: 'AirPods Pro',
@@ -103,7 +101,7 @@ async function seed() {
         discountPrice: 4990000,
         discountPercent: 17,
         description: 'AirPods Pro với chống ồn chủ động',
-        categoryId: categories.length > 3 ? categories[3]._id.toString() : categories[0]._id.toString()
+        categoryId: categories[3]?._id.toString() || categories[0]._id.toString()
       },
       {
         name: 'Apple Watch Series 9',
@@ -114,7 +112,7 @@ async function seed() {
         discountPrice: 7990000,
         discountPercent: 11,
         description: 'Apple Watch Series 9 với chip S9',
-        categoryId: categories.length > 3 ? categories[3]._id.toString() : categories[0]._id.toString()
+        categoryId: categories[3]?._id.toString() || categories[0]._id.toString()
       },
       {
         name: 'Xiaomi 14 Ultra',
@@ -133,22 +131,45 @@ async function seed() {
       try {
         const createdProduct = await productService.create(product);
         console.log(`Created product: ${createdProduct.name}`);
-        
-        // Simulate some views and sales
         const randomViews = Math.floor(Math.random() * 1000) + 100;
         const randomSales = Math.floor(Math.random() * 50) + 10;
-        
-        // Update view count and sold count manually
         await productService['productRepository'].update(
           { _id: createdProduct._id },
-          { 
-            viewCount: randomViews,
-            soldCount: randomSales
-          }
+          { viewCount: randomViews, soldCount: randomSales }
         );
-        
       } catch (error) {
         console.log(`Product ${product.name} might already exist or error:`, error.message);
+      }
+    }
+
+    // --------- Tạo 15 sản phẩm mới cho category Đồ gia dụng ---------
+    const homeCategory = categories.find(c => c.slug === 'do-gia-dung');
+    if (homeCategory) {
+      const sampleHomeProducts = Array.from({ length: 15 }).map((_, i) => ({
+        name: `Sản phẩm gia dụng ${i + 1}`,
+        slug: `san-pham-gia-dung-${i + 1}`,
+        images: [`https://via.placeholder.com/400x300?text=Gia+dung+${i + 1}`],
+        stock: Math.floor(Math.random() * 100) + 10,
+        price: Math.floor(Math.random() * 5_000_000) + 500_000,
+        discountPrice: Math.floor(Math.random() * 4_000_000) + 400_000,
+        discountPercent: Math.floor(Math.random() * 30),
+        description: `Mô tả sản phẩm gia dụng số ${i + 1}`,
+        categoryId: homeCategory._id.toString()
+      }));
+
+      for (const product of sampleHomeProducts) {
+        try {
+          const createdProduct = await productService.create(product);
+          console.log(`Created home product: ${createdProduct.name}`);
+          const randomViews = Math.floor(Math.random() * 1000) + 100;
+          const randomSales = Math.floor(Math.random() * 50) + 10;
+          await productService['productRepository'].update(
+            { _id: createdProduct._id },
+            { viewCount: randomViews, soldCount: randomSales }
+          );
+        } catch (error) {
+          console.log(`Home Product ${product.name} might already exist or error:`, error.message);
+        }
       }
     }
 

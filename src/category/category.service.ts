@@ -9,6 +9,16 @@ export class CategoryService {
 	@InjectRepository(Category)
 	private categoryRepository: Repository<Category>;
 
+	async findAll() {
+		return this.categoryRepository.find();
+	}
+
+	async findBySlug(slug: string) {
+		const category = await this.categoryRepository.findOne({ where: { slug } });
+		if (!category) throw new HttpException('Category not found', 404);
+		return category;
+	}
+
 	async create(dto: CreateCategoryDto) {
 		const exists = await this.categoryRepository.findOne({ where: { slug: dto.slug } });
 		if (exists) throw new HttpException('Category slug already exists', 400);

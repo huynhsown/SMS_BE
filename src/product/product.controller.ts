@@ -19,6 +19,12 @@ export class ProductController {
 		return this.productService.getPaginatedProducts(pagination);
 	}
 
+	// Lấy sản phẩm theo danh mục (Lazy Loading)
+	@Get('category/:categorySlug')
+	async getProductsByCategory(@Param('categorySlug') categorySlug: string, @Query() pagination: PaginationDto) {
+		return this.productService.getProductsByCategorySlug(categorySlug, pagination);
+	}
+
 	// Lấy chi tiết sản phẩm và tăng lượt xem
 	@Get(':slug')
 	async getDetail(@Param('slug') slug: string) {
