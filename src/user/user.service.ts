@@ -116,7 +116,7 @@ export class UserService {
     if (!isMatch) {
       throw new HttpException('Invalid email or password', 401);
     }
-    const payload = { sub: user._id, email: user.email };
+  const payload = { sub: user._id.toString(), email: user.email };
     const accessToken = this.jwtService.sign(payload);
     return {
       message: 'Login successful',

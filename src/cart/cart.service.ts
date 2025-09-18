@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Cart, CartItem } from './entities/cart.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { ObjectId } from 'mongodb';
-import { CartResponseDto, CartItemResponseDto } from './dto/cart.dto';
+import { CartResponseDto, CartItemResponseDto, AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class CartService {
 
     const token = authHeader.replace('Bearer ', '');
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+  const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
       return decoded.sub || decoded.userId || decoded.id;
     } catch (e) {
       throw new HttpException('Invalid or expired token', 401);
@@ -44,6 +44,88 @@ export class CartService {
       await this.cartRepository.save(cart);
     }
 
+    await this.validateAndUpdateCartItems(cart);
+    return this.formatCartResponse(cart);
+  }
+
+  // Thêm sản phẩm vào giỏ
+  async addToCart(dto: AddToCartDto, authHeader: string): Promise<CartResponseDto> {
+    const userId = this.extractUserId(authHeader);
+    const { productId, quantity } = dto;
+
+    const product = await this.productRepository.findOne({ where: { _id: new ObjectId(productId) } as any });
+    if (!product) throw new HttpException('Product not found', 404);
+    if (quantity < 1) throw new HttpException('Quantity must be at least 1', 400);
+
+    let cart = await this.cartRepository.findOne({ where: { userId } });
+    if (!cart) {
+      cart = this.cartRepository.create({ userId, items: [], totalAmount: 0, totalDiscountAmount: 0, finalAmount: 0, totalItems: 0 });
+    }
+
+    const existing = cart.items.find(i => i.productId?.toString() === productId.toString());
+    const price = product.price;
+    const discountPrice = product.discountPrice || product.price;
+    const discountPercent = product.discountPercent || 0;
+
+    if (existing) {
+      existing.quantity += quantity;
+      existing.price = price;
+      existing.discountPrice = discountPrice;
+      existing.discountPercent = discountPercent;
+      existing.totalPrice = existing.price * existing.quantity;
+      existing.totalDiscountPrice = existing.discountPrice * existing.quantity;
+    } else {
+      const item: CartItem = {
+        productId: product._id.toString(),
+        name: product.name,
+        slug: product.slug,
+        image: product.images?.[0] || '',
+        price,
+        discountPrice,
+        discountPercent,
+        quantity,
+        totalPrice: price * quantity,
+        totalDiscountPrice: discountPrice * quantity,
+      };
+      cart.items.push(item);
+    }
+
+    this.calculateCartTotals(cart);
+    await this.cartRepository.save(cart);
+    await this.validateAndUpdateCartItems(cart);
+    return this.formatCartResponse(cart);
+  }
+
+  // Cập nhật số lượng sản phẩm trong giỏ
+  async updateCartItem(dto: UpdateCartItemDto, authHeader: string): Promise<CartResponseDto> {
+    const userId = this.extractUserId(authHeader);
+    const { productId, quantity } = dto;
+
+    const cart = await this.cartRepository.findOne({ where: { userId } });
+    if (!cart) throw new HttpException('Cart not found', 404);
+
+    const idx = cart.items.findIndex(i => i.productId?.toString() === productId.toString());
+    if (idx === -1) throw new HttpException('Item not found in cart', 404);
+
+    if (quantity <= 0) {
+      cart.items.splice(idx, 1);
+    } else {
+      const product = await this.productRepository.findOne({ where: { _id: new ObjectId(productId) } as any });
+      if (!product) throw new HttpException('Product not found', 404);
+      const price = product.price;
+      const discountPrice = product.discountPrice || product.price;
+      const discountPercent = product.discountPercent || 0;
+      const item = cart.items[idx];
+      item.quantity = quantity;
+      item.price = price;
+      item.discountPrice = discountPrice;
+      item.discountPercent = discountPercent;
+      item.totalPrice = price * quantity;
+      item.totalDiscountPrice = discountPrice * quantity;
+    }
+
+    this.calculateCartTotals(cart);
+    await this.cartRepository.save(cart);
     await this.validateAndUpdateCartItems(cart);
     return this.formatCartResponse(cart);
   }

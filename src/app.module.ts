@@ -12,6 +12,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Product } from './product/entities/product.entity';
 import { Category } from './category/entities/category.entity';
 import { Cart } from './cart/entities/cart.entity';
+import { Order } from './order/entities/order.entity';
+import { OrderModule } from './order/order.module';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
 import { CartModule } from './cart/cart.module';
@@ -24,7 +26,7 @@ import { CartModule } from './cart/cart.module';
     // 2) Register JwtModule using process.env.JWT_SECRET
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
+      secret: process.env.JWT_SECRET || 'secret',
       signOptions: { expiresIn: '1h' },
     }),
 
@@ -39,7 +41,7 @@ import { CartModule } from './cart/cart.module';
       authSource: 'admin',
       synchronize: true,
       logging: true,
-      entities: [User, Product, Category, Cart],
+  entities: [User, Product, Category, Cart, Order],
       migrations: [],
       subscribers: []
     }),
@@ -52,6 +54,7 @@ import { CartModule } from './cart/cart.module';
     CategoryModule,
     ProductModule,
     CartModule,
+    OrderModule,
     OtpModule,
     MailModule
   ],
